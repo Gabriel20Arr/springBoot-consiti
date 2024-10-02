@@ -1,5 +1,7 @@
 package com.apirest.apirestfull.security.entity;
 
+import com.apirest.apirestfull.security.enums.RolNombre;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
