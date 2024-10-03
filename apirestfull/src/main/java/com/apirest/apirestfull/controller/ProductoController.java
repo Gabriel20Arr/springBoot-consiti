@@ -6,6 +6,7 @@ import org.aspectj.bridge.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -90,12 +91,13 @@ public class ProductoController {
         return new ResponseEntity<Mensaje>(new Mensaje("Producto actulizado correctamente"), HttpStatus.OK);
     }
     
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Mensaje> delete(@PathVariable("id") int id){
         if(!productoService.existsById(id))
             return new ResponseEntity<Mensaje>(new Mensaje("El productoa eliminar no existe"), HttpStatus.NOT_FOUND);
         productoService.delete(id);
         return new ResponseEntity<Mensaje>(new Mensaje("Producto eliminado correctamente"), HttpStatus.OK);
-
+        
     }            
 }

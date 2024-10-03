@@ -15,7 +15,6 @@ import com.nimbusds.jwt.*;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Component
@@ -68,12 +67,12 @@ public class JwtProvider {
         return false;
     }
 
-    public String generateRefreshToken(JwtDto jwtDto) throws ParseException {
+    public String generateRefreshToken(String string) throws ParseException {
 
         try {
-            Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(jwtDto.getToken());
+            Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(string.getToken());
         } catch (ExpiredJwtException e) {
-            JWT jwt = JWTParser.parse(jwtDto.getToken());
+            JWT jwt = JWTParser.parse(string.getToken());
             JWTClaimsSet claims = jwt.getJWTClaimsSet();
             String nombreUsuario = claims.getSubject();
             List<String> roles = (List<String>)claims.getClaim("roles");
@@ -89,4 +88,3 @@ public class JwtProvider {
         return null;
     }
 }
-
