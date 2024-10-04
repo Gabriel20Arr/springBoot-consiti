@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.apirest.apirestfull.security.entity.Rol;
+import com.apirest.apirestfull.security.enums.RolNombre;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -26,5 +27,5 @@ public class NuevoUsuario {
     @NotBlank
     private String password;
 
-    private Set<Rol> roles = new HashSet<Rol>();
+     private Set<RolNombre> roles;
 }

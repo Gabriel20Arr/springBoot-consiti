@@ -41,8 +41,6 @@ public class JwTokenFilter extends OncePerRequestFilter{
                 } else {
                     logger.warn("UserDetails no encontrado para: " + username); // Agregar log
                 }
-            } else {
-                logger.warn("Token no válido o nulo"); // Agregar log
             }
         } catch (Exception e) {
             logger.error("fail en el metodo doFilter" + e.getMessage());
@@ -50,6 +48,7 @@ public class JwTokenFilter extends OncePerRequestFilter{
         
         filterChain.doFilter(req, res);
     }
+    
 
     private String getToken(HttpServletRequest request){
         String header = request.getHeader("Authorization");

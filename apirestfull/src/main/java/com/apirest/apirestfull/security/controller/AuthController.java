@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.security.core.AuthenticationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,13 +53,16 @@ public class AuthController {
     @Autowired
     JwtProvider jwtProvider;
 
+    private final static Logger logger = LoggerFactory.getLogger(AuthController.class);
+
+
     @PostMapping("/nuevo")
     public ResponseEntity<Mensaje> nuevo(@Valid @RequestBody NuevoUsuario nuevoUsuario, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) 
             return new ResponseEntity<>(new Mensaje("Verifique los datos introducidos"), HttpStatus.BAD_REQUEST);
         
         if(usuarioService.existsByNombreUsuario(nuevoUsuario.getNombreUsuario()))
-            return new ResponseEntity<>(new Mensaje("El nombre " + nuevoUsuario.getNombre() + " ya se encuentra registrado"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new Mensaje("El nombre de usuario " + nuevoUsuario.getNombreUsuario() + " ya se encuentra registrado"), HttpStatus.BAD_REQUEST);
         
         if(usuarioService.existsByEmail(nuevoUsuario.getEmail()))
             return new ResponseEntity<>(new Mensaje("El email " + nuevoUsuario.getEmail() + " ya se encuentra registrado"), HttpStatus.BAD_REQUEST);
@@ -69,19 +74,30 @@ public class AuthController {
                 nuevoUsuario.getEmail(),
                 passwordEncoder.encode(nuevoUsuario.getPassword())
         );
-
+    
         // Asignar roles
         Set<Rol> roles = new HashSet<>();
-        roles.add(rolService.getByRolNombre(RolNombre.ROLE_USER).get());
-        if (nuevoUsuario.getRoles().contains("admin")) 
+        logger.info("Roles recibidos antes del if: " + nuevoUsuario.getRoles());
+        // Verificar si el usuario solicitó el rol de admin
+        if (nuevoUsuario.getRoles().contains(RolNombre.ROLE_ADMIN)) {
+            System.out.println("Rol de admin detectado");
             roles.add(rolService.getByRolNombre(RolNombre.ROLE_ADMIN).get());
-
-        usuario.setRoles(roles); // Aquí va en minúscula, no Usuario.setRoles()
-
+        } else {
+            // Si no se solicitó el rol de admin, asignar el rol de usuario por defecto
+            System.out.println("Rol de user detectado");
+            roles.add(rolService.getByRolNombre(RolNombre.ROLE_USER).get()); // Asignar rol por defecto
+        }
+        
+        // Antes de la verificación de roles
+        logger.info("Roles recibidos: " + nuevoUsuario.getRoles());
+        System.out.println("NOMBRE DEL ROL CREADO" + nuevoUsuario.getRoles());
+        usuario.setRoles(roles);
+    
         usuarioService.save(usuario);
-
+    
         return new ResponseEntity<>(new Mensaje("Usuario registrado con éxito"), HttpStatus.CREATED);
     }
+    
 
     // Endpoint para el login
     @PostMapping("/login")

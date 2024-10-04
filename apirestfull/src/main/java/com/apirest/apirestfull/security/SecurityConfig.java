@@ -3,6 +3,7 @@ package com.apirest.apirestfull.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -57,6 +58,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // Deshabilita CSRF por simplicidad
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**", "/error").permitAll() // Rutas permitidas sin autenticación
+                .requestMatchers(HttpMethod.POST, "/productos").hasRole("ADMIN") // Solo los ADMIN pueden crear productos
+                .requestMatchers("/productos/**").authenticated() // Las demás acciones sobre productos requieren autenticación
                 .anyRequest().authenticated() // Cualquier otra solicitud requiere autenticación
             )
             .exceptionHandling(ex -> ex

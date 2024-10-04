@@ -46,4 +46,13 @@ public class Rol {
     public Rol(String rolNombre) {
         this.rolNombre = RolNombre.valueOf(rolNombre.toUpperCase()); // Convertir el String a Enum
     }
+
+    @Override
+    public String toString() {
+        return "Rol{" +
+                "id=" + id +
+                ", rolNombre=" + rolNombre +
+                '}';
+    }
+
 }
