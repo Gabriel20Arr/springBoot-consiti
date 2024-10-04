@@ -29,15 +29,21 @@ public class JwTokenFilter extends OncePerRequestFilter{
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = getToken(req);
-            if(token!=null && jwtProvider.validateToken(token)){
-                String nombreUsuario = jwtProvider.getNombreUsuarioFromToken(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(nombreUsuario);
-
-                UsernamePasswordAuthenticationToken auth = 
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            if (token != null && jwtProvider.validateToken(token)) {
+                logger.info("Token válido: " + token); // Agregar log
+                String username = jwtProvider.getNombreUsuarioFromToken(token);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+    
+                if (userDetails != null) {
+                    UsernamePasswordAuthenticationToken auth = 
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    logger.warn("UserDetails no encontrado para: " + username); // Agregar log
+                }
+            } else {
+                logger.warn("Token no válido o nulo"); // Agregar log
             }
-
         } catch (Exception e) {
             logger.error("fail en el metodo doFilter" + e.getMessage());
         }
@@ -46,9 +52,9 @@ public class JwTokenFilter extends OncePerRequestFilter{
     }
 
     private String getToken(HttpServletRequest request){
-        String header = request.getHeader("Athorization");
+        String header = request.getHeader("Authorization");
         if(header != null && header.startsWith("Bearer"))
-            return header.replace("Beader", "");
+            return header.replace("Bearer ", "");
         return null;
     }
 }

@@ -1,6 +1,9 @@
 package com.apirest.apirestfull.security.jwt;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;  // Importa SecretKey desde javax.crypto
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +15,7 @@ import com.apirest.apirestfull.security.dto.JwtDto;
 import com.apirest.apirestfull.security.entity.UsuarioPrincipal;
 import com.nimbusds.jwt.*;
 
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -28,6 +32,13 @@ public class JwtProvider {
 
     @Value("${jwt.expiration}")
     private int expiration;
+    
+    private final SecretKey secretKey;
+
+    // Constructor donde inicializamos el SecretKey
+    public JwtProvider(@Value("${jwt.secret}") String secret) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
 
     // Método para generar el token JWT
     public String generateToken(Authentication authentication) {
@@ -35,23 +46,24 @@ public class JwtProvider {
         List<String> roles= usuarioPrincipal.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
         // Creamos el token usando la API de jjwt
         return Jwts.builder()
-                .setSubject(usuarioPrincipal.getUsername()) // Establecer el nombre de usuario en el token
-                .claim("roles", roles)
-                .setIssuedAt(new Date()) // Fecha de creación del token
-                .setExpiration(new Date(new Date().getTime() + expiration)) // Fecha de expiración
-                .signWith(SignatureAlgorithm.HS512, secret.getBytes()) // Firmar el token con el algoritmo HS512 y la clave secreta
-                .compact(); // Compactar el JWT
+            .setSubject(usuarioPrincipal.getUsername())
+            .claim("roles", roles) // Asegúrate de que esto sea una lista de Strings
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(new Date().getTime() + expiration))
+            .signWith(SignatureAlgorithm.HS512, secretKey)
+            .compact();
+
     }
 
     // Método para obtener el username (subject) del token JWT
     public String getNombreUsuarioFromToken(String token) {
-        return Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
     }
 
     // Método para validar el token JWT
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(token);
+            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Token malformado");
@@ -67,12 +79,11 @@ public class JwtProvider {
         return false;
     }
 
-    public String generateRefreshToken(String string) throws ParseException {
-
+    public String generateRefreshToken(JwtDto jwtDto) throws ParseException {
         try {
-            Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(string.getToken());
+            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(jwtDto.getToken());
         } catch (ExpiredJwtException e) {
-            JWT jwt = JWTParser.parse(string.getToken());
+            JWT jwt = JWTParser.parse(jwtDto.getToken());
             JWTClaimsSet claims = jwt.getJWTClaimsSet();
             String nombreUsuario = claims.getSubject();
             List<String> roles = (List<String>)claims.getClaim("roles");
@@ -82,7 +93,7 @@ public class JwtProvider {
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + expiration)) // Usa refreshExpiration
-                .signWith(SignatureAlgorithm.HS512, secret.getBytes())
+                .signWith(SignatureAlgorithm.HS512, secretKey)
                 .compact();
         }
         return null;

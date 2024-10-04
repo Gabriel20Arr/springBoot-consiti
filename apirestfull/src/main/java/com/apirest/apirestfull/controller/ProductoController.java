@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
-@RequestMapping("/pruducts")
+@RequestMapping("/productos")
 @CrossOrigin(origins = "*")
 public class ProductoController {
     @Autowired

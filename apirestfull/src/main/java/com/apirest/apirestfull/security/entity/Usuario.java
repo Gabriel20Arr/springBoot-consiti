@@ -33,6 +33,9 @@ public class Usuario {
     inverseJoinColumns = @JoinColumn(name = "rol_id"))
     private Set<Rol> roles = new HashSet<Rol>();
 
+    public Usuario() {
+    }
+
     public Usuario(@NotEmpty String nombre, @NotEmpty String nombreUsuario, @NotEmpty String email,
             @NotEmpty String password) {
         this.nombre = nombre;

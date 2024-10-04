@@ -36,20 +36,12 @@ public class UsuarioPrincipal implements UserDetails{
         return authorities;
     }
 
-    public String getNombre() {
-        return nombre;
-    }
-
     public String getPassword() {
         return password;
     }
-    
+
     public String getUsername() {
         return nombreUsuario;
-    }
-
-    public String getEmail() {
-        return email;
     }
 
     @Override
@@ -70,6 +62,14 @@ public class UsuarioPrincipal implements UserDetails{
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
 }

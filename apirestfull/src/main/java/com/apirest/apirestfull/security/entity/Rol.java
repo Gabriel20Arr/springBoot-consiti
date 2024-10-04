@@ -10,11 +10,20 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+/**
+ * Clase que representa la entidad Rol en la base de datos.
+ */
 @Entity
 @Table(name = "rol")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Rol {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +33,17 @@ public class Rol {
     @Enumerated(EnumType.STRING)
     private RolNombre rolNombre;
 
+    /**
+     * Constructor que inicializa el rol con el nombre proporcionado.
+     * 
+     * @param rolNombre el nombre del rol
+     */
     public Rol(@NotNull RolNombre rolNombre) {
         this.rolNombre = rolNombre;
+    }
+
+    // Nuevo constructor que acepta un String
+    public Rol(String rolNombre) {
+        this.rolNombre = RolNombre.valueOf(rolNombre.toUpperCase()); // Convertir el String a Enum
     }
 }

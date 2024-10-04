@@ -11,13 +11,19 @@ import com.apirest.apirestfull.security.entity.Usuario;
 import com.apirest.apirestfull.security.entity.UsuarioPrincipal;
 
 @Service
-public class UserDetailsServiceImpl implements UserDetailsService{
+public class UserDetailsServiceImpl implements UserDetailsService {
+    
     @Autowired
-    UsuarioService usuarioService;
+    private UsuarioService usuarioService; // Inyección correcta
 
-    @Autowired
-    public UserDetails loadUserByUsername(String nombreUsuario) throws UsernameNotFoundException {
-        Usuario usuario = usuarioService.getByNombreUsuario(nombreUsuario).get();
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Buscar el usuario por nombre de usuario
+        Usuario usuario = usuarioService.getByNombreUsuario(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+
+        // Construir y devolver el UserDetails utilizando UsuarioPrincipal
         return UsuarioPrincipal.build(usuario);
     }
 }
+

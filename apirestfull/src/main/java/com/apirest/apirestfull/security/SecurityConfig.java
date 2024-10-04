@@ -1,5 +1,6 @@
 package com.apirest.apirestfull.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -7,6 +8,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -20,8 +22,11 @@ import com.apirest.apirestfull.security.service.UserDetailsServiceImpl;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final UserDetailsServiceImpl userDetailsService;
-    private final JwtEntryPoint jwtEntryPoint;
+    @Autowired
+    UserDetailsServiceImpl userDetailsService;
+    
+    @Autowired
+    JwtEntryPoint jwtEntryPoint;
 
     public SecurityConfig(UserDetailsServiceImpl userDetailsService, JwtEntryPoint jwtEntryPoint) {
         this.userDetailsService = userDetailsService;
@@ -49,18 +54,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf().disable() // Deshabilita CSRF por simplicidad
-            .authorizeRequests()
-                .requestMatchers("/auth/**").permitAll() // Rutas permitidas sin autenticación
+            .csrf(csrf -> csrf.disable()) // Deshabilita CSRF por simplicidad
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/auth/**", "/error").permitAll() // Rutas permitidas sin autenticación
                 .anyRequest().authenticated() // Cualquier otra solicitud requiere autenticación
-            .and()
-            .exceptionHandling().authenticationEntryPoint(jwtEntryPoint) // Manejo de errores
-            .and()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Sin sesiones en el servidor
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(jwtEntryPoint) // Manejo de errores
+            )
+            .sessionManagement(sess -> sess
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Sin sesiones en el servidor
+            );
         
         // Agrega el filtro de JWT antes del filtro de autenticación por defecto
         http.addFilterBefore(jwTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
+    
         return http.build();
     }
+    
 }

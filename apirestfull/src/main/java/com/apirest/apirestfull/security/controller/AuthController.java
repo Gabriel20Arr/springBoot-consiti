@@ -2,6 +2,8 @@ package com.apirest.apirestfull.security.controller;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -81,33 +83,37 @@ public class AuthController {
         return new ResponseEntity<>(new Mensaje("Usuario registrado con éxito"), HttpStatus.CREATED);
     }
 
-        // Endpoint para el login
+    // Endpoint para el login
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginUsuario loginUsuario, BindingResult bindingResult) {
         if (bindingResult.hasErrors())
-            return new ResponseEntity<Mensaje>(new Mensaje("Usuario invalido"), HttpStatus.UNAUTHORIZED);
-
-        // Autenticar al usuario
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(loginUsuario.getNombreUsuario(), loginUsuario.getPassword())
-        );
-
-        // Establecer el contexto de seguridad
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Generar el JWT
-        String jwt = jwtProvider.generateToken(authentication);
-
-        // Crear DTO con el token y los detalles del usuario
-        JwtDto jwtDto = new JwtDto(jwt);
-
-        return new ResponseEntity<JwtDto>(jwtDto, HttpStatus.OK);
+            return new ResponseEntity<Mensaje>(new Mensaje("Usuario inválido"), HttpStatus.UNAUTHORIZED);
+        
+        try {
+            // Autenticar al usuario
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginUsuario.getNombreUsuario(), loginUsuario.getPassword())
+            );
+    
+            // Establecer el contexto de seguridad
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+    
+            // Generar el JWT
+            String jwt = jwtProvider.generateToken(authentication);
+    
+            // Crear DTO con el token y los detalles del usuario
+            JwtDto jwtDto = new JwtDto(jwt);
+            
+            return new ResponseEntity<JwtDto>(jwtDto, HttpStatus.OK);
+        } catch (AuthenticationException e) {
+            return new ResponseEntity<Mensaje>(new Mensaje("Credenciales incorrectas"), HttpStatus.UNAUTHORIZED);
+        }
     }
 
     // Endpoint para refrescar el token
     @PostMapping("/refresh")
     public ResponseEntity<JwtDto> refresh(@RequestBody JwtDto jwtDto) throws ParseException {
-        String token = jwtProvider.generateRefreshToken(jwtDto.getToken());
+        String token = jwtProvider.generateRefreshToken(jwtDto);
         JwtDto newJwtDto = new JwtDto(token);
         return new ResponseEntity<JwtDto>(newJwtDto, HttpStatus.OK);
     }
